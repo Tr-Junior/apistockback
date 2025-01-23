@@ -3,20 +3,21 @@ const path = require('path');
 const fs = require('fs');
 
 // Verificar e criar o diretório de uploads, caso não exista
-const uploadDir = process.env.UPLOAD_DIR || './uploads';
+const uploadDir = path.resolve(process.env.UPLOAD_DIR || './src/uploads');
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Definir armazenamento das imagens
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);  // Usar o diretório de uploads
+    cb(null, uploadDir);  // Usar o diretório absoluto
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));  // Nome único para o arquivo
+    cb(null, `${Date.now()}-${file.originalname}`);  // Nome único para o arquivo
   }
 });
+
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
