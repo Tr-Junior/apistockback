@@ -73,6 +73,12 @@ app.use("/api", cepRoute);
 
 app.use(errorMiddleware);
 //app.use(uploadMiddleware);
-//app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+
+// Servir arquivos estáticos da pasta 'uploads'
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+
 
 module.exports = app;
