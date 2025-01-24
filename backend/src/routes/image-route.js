@@ -15,6 +15,6 @@ router.put('/update/logo', uploadMiddleware, imageController.updateImage('logo')
 // Rota para atualizar a imagem do PDF
 router.put('/update/pdf', uploadMiddleware, imageController.updateImage('pdf'));
 
-//router.get('/image',uploadMiddleware, imageController.getImageByType);
+router.get('/image',uploadMiddleware, imageController.getImageByType);
 
 module.exports = router;
