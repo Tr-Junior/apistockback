@@ -9,7 +9,15 @@ const schema = new mongoose.Schema({
   filePath: { 
     type: String,
      required: true 
-    },  // Caminho do arquivo
+    },  // Caminho do arquivo para visualizar no front
+    name: { 
+      type: String, 
+      required: true 
+    },  // Nome do arquivo para deletar da pasta
+    imageUrl: {
+      type: String,
+      required: true
+    },  // Link para visualizar o arquivo no front
   createdAt: { 
     type: Date, 
     default: Date.now 
