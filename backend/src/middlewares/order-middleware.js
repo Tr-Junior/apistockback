@@ -18,9 +18,14 @@ exports.validateMongoId = (req, res, next) => {
 /**
  * Middleware para validar a entrada de dados ao criar pedidos.
  */
-
 exports.validateOrderInput = (req, res, next) => {
   const contract = new ValidationContract();
+
+  // Validação de customer
+  contract.isRequired(req.body.customer, 'O ID do cliente é obrigatório.');
+  if (req.body.customer && !mongoose.Types.ObjectId.isValid(req.body.customer)) {
+    return res.status(400).send({ message: 'ID do cliente inválido.' });
+  }
 
   // Validação de itens da venda
   if (!req.body.sale || !Array.isArray(req.body.sale.items) || req.body.sale.items.length === 0) {
@@ -66,7 +71,6 @@ exports.validateOrderInput = (req, res, next) => {
   next();
 };
 
-
 /**
  * Middleware para verificar se o pedido existe antes de realizar operações.
  */
@@ -89,4 +93,3 @@ exports.checkOrderExists = async (req, res, next) => {
     });
   }
 };
-
