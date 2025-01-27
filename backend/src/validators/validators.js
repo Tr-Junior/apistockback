@@ -59,6 +59,15 @@ ValidationContract.prototype.isNumber = function(value, message) {
 };
 
 /**
+ * Valida se o valor é uma string.
+ */
+ValidationContract.prototype.isString = function(value, message) {
+    if (typeof value !== 'string') {
+        this.errors.push({ message: message });
+    }
+};
+
+/**
  * Valida se o valor é um array.
  */
 ValidationContract.prototype.isArray = function(value, message) {
