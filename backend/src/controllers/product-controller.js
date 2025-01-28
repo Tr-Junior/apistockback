@@ -30,14 +30,12 @@ exports.getById = async (req, res, next) => {
 
 exports.searchByTitle = async (req, res, next) => {
     try {
-        const searchTerm = req.body.title;
-        const data = await repository.getByTitle(searchTerm);
-
+        const { title, page, limit } = req.body;
+        const data = await repository.getByTitle(title, page, limit);
         res.status(200).send(data);
     } catch (e) {
-        console.error('Erro:', e);
         res.status(500).send({
-            message: 'Falha ao processar a requisição',
+            message: 'falha ao processar a requisição'
         });
     }
 };
