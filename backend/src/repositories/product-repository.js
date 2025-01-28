@@ -44,7 +44,6 @@ exports.getByTitle = async (title, page = 1, limit = 25) => {
 
 
 
-
 exports.create = async (data) => {
     var product = new Product(data)
     await product.save();
