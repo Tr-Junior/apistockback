@@ -11,7 +11,16 @@ exports.get = async (req, res) => {
 
     try {
         const data = await repository.get(page, limit);
-        res.status(200).send(data);
+        const totalItems = await repository.getTotalItems(); 
+        const totalPages = Math.ceil(totalItems / limit); 
+
+        res.status(200).send({
+            data, 
+            totalItems, 
+            totalPages,  
+            currentPage: page, 
+            perPage: limit  
+        });
     } catch (e) {
         console.error('Erro ao processar a requisição:', e); 
         res.status(500).send({
@@ -20,6 +29,7 @@ exports.get = async (req, res) => {
         });
     }
 };
+
 
 exports.getById = async (req, res, next) => {
     try {
