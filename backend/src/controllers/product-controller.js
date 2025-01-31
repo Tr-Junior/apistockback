@@ -6,16 +6,20 @@ const repository = require('../repositories/product-repository');
 const guid = require('guid');
 
 
-exports.get = async (req, res, next) => {
+exports.get = async (req, res) => {
+    const { page = 1, limit = 100 } = req.query;
+
     try {
-        var data = await repository.get();
+        const data = await repository.get(page, limit);
         res.status(200).send(data);
     } catch (e) {
+        console.error('Erro ao processar a requisição:', e); 
         res.status(500).send({
-            message: 'falha ao processar a requisição'
+            message: 'Falha ao processar a requisição',
+            error: e.message 
         });
     }
-}
+};
 
 exports.getById = async (req, res, next) => {
     try {

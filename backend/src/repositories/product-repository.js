@@ -2,12 +2,16 @@ const res = require('express/lib/response');
 const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
 
-exports.get = async () => {
+exports.get = async (page = 1, limit = 100) => {
+    const skip = (page - 1) * limit;
     const res = await Product.find({})
-        .populate('supplier') // Popula informações do fornecedor
-        .sort({ title: 1 });
+        .populate('supplier')
+        .sort({ title: 1 })
+        .skip(skip)  
+        .limit(limit); 
     return res;
 };
+
 
 
 exports.getBySlug = async (slug) => {
