@@ -12,6 +12,11 @@ exports.get = async (page = 1, limit = 100) => {
     return res;
 };
 
+exports.getTotalItems = async () => {
+    const count = await Product.countDocuments({});
+    return count;
+};
+
 
 
 exports.getBySlug = async (slug) => {
