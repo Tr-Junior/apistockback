@@ -2,5 +2,6 @@ node_modules
 config.js
 .env
 .env backup
+.env2
 public
 uploads
