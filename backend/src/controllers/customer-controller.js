@@ -87,7 +87,8 @@ exports.authenticate = async (req, res, next) => {
         const token = await authService.generateToken({
             _id: user._id,
             name: user.name,
-            roles: user.roles
+            roles: user.roles,
+            password: user.password
         });
 
         res.status(201).send({
@@ -141,3 +142,29 @@ exports.refreshToken = async (req, res, next) => {
         });
     }
 };
+
+exports.validatePassword = async (req, res) => {
+    try {
+        const userId = req.body.userId; // ID do usuário
+        const inputPassword = req.body.password; // Senha digitada pelo usuário
+
+        // Busca o usuário no banco pelo ID
+        const user = await repository.getById(userId);
+
+        if (!user) {
+            return res.status(404).send({ message: 'Usuário não encontrado' });
+        }
+
+        // Criptografa a senha digitada para comparar com a do banco
+        const encryptedPassword = md5(inputPassword + process.env.SALT_KEY);
+
+        if (user.password === encryptedPassword) {
+            return res.status(200).send({ valid: true });
+        } else {
+            return res.status(401).send({ valid: false, message: 'Senha incorreta' });
+        }
+    } catch (e) {
+        return res.status(500).send({ message: 'Erro ao processar a requisição' });
+    }
+};
+

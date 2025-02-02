@@ -7,8 +7,7 @@ const md5 = require('md5');
 
 exports.get = async () => {
     const res = await Customer
-        .find({}
-        );
+        .find({});
     return res;
 }
 

@@ -11,5 +11,5 @@ router.post('/authenticate', controller.authenticate);
 router.post('/refresh-token', authService.authorize, controller.refreshToken);
 router.get('/getById/:id', authService.authorize, controller.getById);
 router.put('/update-password', authService.authorize, controller.updatePassword);
-
+router.post('/validate-password', controller.validatePassword);
 module.exports = router;
