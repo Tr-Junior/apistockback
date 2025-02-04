@@ -45,21 +45,12 @@ exports.getById = async (req, res, next) => {
 exports.searchByTitle = async (req, res, next) => {
     try {
       const { title, page, limit } = req.body;
-  
-      // Log para verificar o que o front-end está enviando
-      console.log(`[BACK-END] Dados recebidos:`, { title, page, limit });
-  
       const data = await repository.getByTitle(title, page, limit);
-  
-      // Log para verificar os dados retornados ao front-end
-      console.log(`[BACK-END] Retornando página ${page}, total de produtos retornados: ${data.products.length}`);
-  
       res.status(200).send({
         products: data.products, // Produtos
         totalRecords: data.total, // Total de registros
       });
     } catch (e) {
-      console.error(`[BACK-END] Erro no processamento:`, e.message);
       res.status(500).send({
         message: 'Falha ao processar a requisição',
       });
