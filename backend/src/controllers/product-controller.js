@@ -7,7 +7,7 @@ const guid = require('guid');
 
 
 exports.get = async (req, res) => {
-    const { page = 1, limit = 100 } = req.query;
+    const { page = 1, limit = 50 } = req.query;
 
     try {
         const data = await repository.get(page, limit);
