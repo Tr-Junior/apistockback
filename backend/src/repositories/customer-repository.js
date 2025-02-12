@@ -86,6 +86,8 @@ exports.createDefaultAdmin = async () => {
     return await user.save();
 };
 
-
+exports.delete = async (id) => {
+    await Customer.findByIdAndDelete(id);
+}
 
 
