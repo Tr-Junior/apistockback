@@ -51,7 +51,6 @@ exports.post = async (req, res, next) => {
         await repository.create({
             name: req.body.name,
             password: md5(req.body.password + process.env.SALT_KEY),
-            pass: md5(req.body.pass),
             roles: req.body.roles,
         });
 
@@ -64,6 +63,18 @@ exports.post = async (req, res, next) => {
         });
     }
 };
+
+exports.deleteUser = async (req, res, next) => {
+    try {
+        await repository.delete(req.params.id)
+        res.status(200).send({
+            message: 'Usuário removido!'
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).send({ message: 'Falha ao processar a requisição.' });
+    }
+}
 
 exports.authenticate = async (req, res, next) => {
     try {
