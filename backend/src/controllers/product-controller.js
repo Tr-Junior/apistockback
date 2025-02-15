@@ -94,9 +94,16 @@ exports.post = async (req, res, next) => {
 
         res.status(201).send({ message: 'Produto cadastrado com sucesso!' });
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: 'Falha ao processar a requisição' });
+        if (error.code === 11000) {
+            return res.status(400).send({
+              message: 'Já existe um produto com este título.',
+              field: error.keyValue,
+            });
+        
     }
+    console.error(error);
+    res.status(500).send({ message: 'Falha ao processar a requisição' });
+}
 };
 
 
