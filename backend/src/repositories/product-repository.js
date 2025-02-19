@@ -72,6 +72,7 @@ exports.update = async (id, data) => {
         $set: {
             title: data.title,
             quantity: data.quantity,
+            min_quantity: (data.quantity / 2), 
             supplier: data.supplier,
             purchasePrice: data.purchasePrice,
             price: data.price

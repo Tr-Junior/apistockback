@@ -82,12 +82,13 @@ exports.post = async (req, res, next) => {
             return res.status(400).send({ message: 'Fornecedor inválido ou não encontrado' });
         }
 
-        // Cria o produto com o ID do fornecedor encontrado ou criado
+       
         await repository.create({
             codigo: guid.raw().substring(0, 6),
             title: req.body.title,
             quantity: req.body.quantity,
-            supplier: supplier._id, // Usa o ID do fornecedor
+            min_quantity: (req.body.quantity / 2),
+            supplier: supplier._id,
             purchasePrice: req.body.purchasePrice,
             price: req.body.price,
         });
