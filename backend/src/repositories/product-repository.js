@@ -39,10 +39,6 @@ exports.getById = async (id) => {
 exports.getByTitle = async (title, page = 1, limit = 25) => {
     const regex = new RegExp(title, 'i');
     const skip = (page - 1) * limit;
-  
-    console.log(`[REPOSITORY] Buscando produtos para página ${page} com limite ${limit}`);
-    console.log(`[REPOSITORY] Skip calculado: ${skip}`);
-  
     // Busca os produtos com filtro e paginação
     const products = await Product.find({ title: regex })
       .populate('supplier', 'name')
@@ -52,10 +48,6 @@ exports.getByTitle = async (title, page = 1, limit = 25) => {
   
     // Conta o número total de produtos correspondentes
     const total = await Product.countDocuments({ title: regex });
-  
-    console.log(
-      `[REPOSITORY] Encontrados ${products.length} produtos na página ${page}. Total de registros: ${total}`
-    );
   
     return { products, total };
   };

@@ -45,6 +45,7 @@ exports.getById = async (req, res, next) => {
 exports.searchByTitle = async (req, res, next) => {
     try {
       const { title, page, limit } = req.body;
+      
       const data = await repository.getByTitle(title, page, limit);
       res.status(200).send({
         products: data.products, // Produtos
