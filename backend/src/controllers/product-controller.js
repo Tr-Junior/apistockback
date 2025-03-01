@@ -148,6 +148,7 @@ exports.updateByIdBody = async (req, res, next) => {
         console.error(e);
         res.status(500).send({
             message: 'Falha ao processar a requisição',
+            error: e.message,
         });
     }
 };

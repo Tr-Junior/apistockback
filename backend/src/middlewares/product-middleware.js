@@ -29,7 +29,6 @@ exports.validateProductInput = (req, res, next) => {
     // Validação de quantidade, preço de compra e preço do produto
     if (req.body.quantity !== undefined) {
       contract.isNumber(req.body.quantity, 'A quantidade deve ser um número.');
-      contract.isRequired(req.body.quantity, 'A quantidade do produto é obrigatória.');
     }
   
     if (req.body.purchasePrice !== undefined) {
@@ -43,7 +42,7 @@ exports.validateProductInput = (req, res, next) => {
     // Se a validação falhar, retorna os erros
     if (!contract.isValid()) {
       return res.status(400).send({
-        errors: contract.errors(),
+        errors: contract.errors,
       });
     }
   
