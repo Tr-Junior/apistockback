@@ -25,7 +25,7 @@ app.use(bodyParser.json(
 ));
 app.use(bodyParser.urlencoded({ extended: false }));
 
-//app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'dist')));
 
 const Product = require('./models/product');
 const Customer = require('./models/customer');
@@ -75,7 +75,9 @@ app.use(errorMiddleware);
 // Servir arquivos estáticos da pasta 'uploads'
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 
 module.exports = app;
