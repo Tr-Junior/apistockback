@@ -5,3 +5,4 @@ config.js
 .env2
 public
 uploads
+dist
