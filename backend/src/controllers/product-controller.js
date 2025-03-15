@@ -7,25 +7,34 @@ const guid = require('guid');
 
 
 exports.get = async (req, res) => {
-    const { page = 1, limit = 50 } = req.query;
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 50;
+
+    // Evita números negativos ou muito altos
+    if (page < 1) page = 1;
+    if (limit < 1 || limit > 100) limit = 50;
 
     try {
-        const data = await repository.get(page, limit);
-        const totalItems = await repository.getTotalItems(); 
-        const totalPages = Math.ceil(totalItems / limit); 
+        // Executa as consultas em paralelo para reduzir tempo de resposta
+        const [data, totalItems] = await Promise.all([
+            repository.get(page, limit),
+            repository.getTotalItems()
+        ]);
+
+        const totalPages = Math.ceil(totalItems / limit);
 
         res.status(200).send({
-            data, 
-            totalItems, 
-            totalPages,  
-            currentPage: page, 
-            perPage: limit  
+            data,
+            totalItems,
+            totalPages,
+            currentPage: page,
+            perPage: limit
         });
     } catch (e) {
-        console.error('Erro ao processar a requisição:', e); 
+        console.error('Erro ao processar a requisição:', e);
         res.status(500).send({
             message: 'Falha ao processar a requisição',
-            error: e.message 
+            error: e.message
         });
     }
 };
@@ -42,22 +51,27 @@ exports.getById = async (req, res, next) => {
     }
 }
 
-exports.searchByTitle = async (req, res, next) => {
+exports.searchByTitle = async (req, res) => {
     try {
-      const { title, page, limit } = req.body;
-      
-      const data = await repository.getByTitle(title, page, limit);
-      res.status(200).send({
-        products: data.products, // Produtos
-        totalRecords: data.total, // Total de registros
-      });
+        let { title, page = 1, limit = 50 } = req.body;
+
+        // Converte para número e define limites seguros
+        page = Math.max(1, parseInt(page) || 1);
+        limit = Math.min(100, Math.max(1, parseInt(limit) || 50));
+
+        // Executa consulta no repositório
+        const data = await repository.getByTitle(title, page, limit);
+
+        res.status(200).send({
+            products: data.products,
+            totalRecords: data.total
+        });
     } catch (e) {
-      res.status(500).send({
-        message: 'Falha ao processar a requisição',
-      });
+        console.error('Erro na busca por título:', e);
+        res.status(500).send({ message: 'Erro interno ao processar a requisição' });
     }
-  };
-  
+};
+
   
 
 exports.post = async (req, res, next) => {
