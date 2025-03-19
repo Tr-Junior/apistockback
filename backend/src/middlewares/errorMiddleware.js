@@ -1,15 +1,28 @@
 const errorMiddleware = (err, req, res, next) => {
-    console.error("Erro capturado:", err.message);
+  console.error("Erro capturado pelo middleware:", err.stack);
   
-    // Resposta padrão para erros
-    const statusCode = err.statusCode || 500; // Padrão 500 para erros do servidor
-    const errorMessage = err.message || "Erro interno no servidor.";
+  // Definição do código de status baseado no erro ou padrão 500
+  const statusCode = err.statusCode || 500;
   
-    return res.status(statusCode).json({
-      erro: true,
-      mensagem: errorMessage,
-    });
-  };
+  // Mensagem de erro personalizada ou padrão
+  const message = err.message || "Erro interno do servidor";
   
-  module.exports = errorMiddleware;
+  // Detalhes adicionais do erro (se houver)
+  const details = err.details || null;
   
+  // Tipo do erro para melhor categorização
+  const errorType = err.name || "Erro Desconhecido";
+
+  // Estrutura de resposta padronizada para erros
+  res.status(statusCode).json({
+      success: false,
+      errorType,
+      message,
+      details,
+      statusCode,
+      timestamp: new Date().toISOString(),
+      path: req.originalUrl,
+  });
+};
+
+module.exports = errorMiddleware;

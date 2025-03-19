@@ -88,7 +88,10 @@ ValidationContract.prototype.isGreaterThan = function(value, min, message) {
 /**
  * Retorna os erros acumulados.
  */
-ValidationContract.prototype.errors = function() {
+/**
+ * Retorna os erros acumulados.
+ */
+ValidationContract.prototype.getErrors = function() {
     return this.errors;
 };
 
