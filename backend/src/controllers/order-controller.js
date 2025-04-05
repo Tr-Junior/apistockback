@@ -40,66 +40,80 @@ exports.getSales = async (req, res, next) => {
 // Criação de venda
 
 exports.post = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-  
-    try {
-      const token = req.body.token || req.query.token || req.headers['x-access-token'];
-      const data = await authService.decodeToken(token);
-  
-      if (!data || !data._id) {
-        throw new Error('Token inválido ou usuário não autenticado.');
-      }
-  
-      const number = guid.raw().substring(0, 6);
-  
-      // Validação de estoque
-      for (const item of req.body.sale.items) {
-        const productData = await product.getById(item.product);
-        if (productData.quantity < item.quantity) {
-          throw new Error(`Estoque insuficiente para o produto: ${productData.name}. Disponível: ${productData.quantity}`);
-        }
-      }
-  
-      // Criação da venda
-      await repository.create({
-        customer: req.body.customer,
-        number: number,
-        sale: req.body.sale,
-      }, { session });
-  
-      // Registro da entrada financeira
-      await entrance.create({
-        numberOfOrder: number,
-        value: req.body.sale.total,
-      }, { session });
-  
-      // Atualização do estoque
-      for (const item of req.body.sale.items) {
-        await Product.findByIdAndUpdate(
-          item.product,
-          { $inc: { quantity: -item.quantity } },
-          { session }
-        );
-      }
-  
-      await session.commitTransaction();
-      session.endSession();
-  
-      res.status(201).send({
-        message: 'Venda efetuada com sucesso',
-      });
-    } catch (e) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error('Erro ao criar venda:', e.stack);
-  
-      res.status(500).send({
-        message: 'Falha ao processar a requisição',
-        error: e.message,
-      });
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Token
+    const token = req.body.token || req.query.token || req.headers['x-access-token'];
+    const userData = await authService.decodeToken(token);
+
+    if (!userData || !userData._id) {
+      throw new Error('Token inválido ou usuário não autenticado.');
     }
-  };
+
+    const orderNumber = guid.raw().substring(0, 6);
+    const { customer, sale } = req.body;
+
+    // Validação de estoque
+    for (const item of sale.items) {
+      const productData = await product.getById(item.product);
+      if (!productData) {
+        throw new Error(`Produto não encontrado: ID ${item.product}`);
+      }
+      if (productData.quantity < item.quantity) {
+        throw new Error(`Estoque insuficiente para o produto: ${productData.name}. Disponível: ${productData.quantity}`);
+      }
+    }
+
+    // Criação da venda
+    await repository.create(
+      {
+        customer,
+        number: orderNumber,
+        sale,
+      },
+      { session }
+    );
+
+    // Registro da entrada financeira
+    await entrance.create(
+      {
+        numberOfOrder: orderNumber,
+        value: sale.total,
+      },
+      { session }
+    );
+
+    // Atualização do estoque
+    const updateStockPromises = sale.items.map((item) =>
+      Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { quantity: -item.quantity } },
+        { session }
+      )
+    );
+    await Promise.all(updateStockPromises);
+
+    await session.commitTransaction();
+
+    res.status(201).send({
+      message: 'Venda efetuada com sucesso',
+      orderNumber,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error('Erro ao criar venda:', error.stack);
+
+    res.status(500).send({
+      message: 'Falha ao processar a requisição',
+      error: error.message,
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
 
 // Exclusão de venda por ID
 exports.delete = async (req, res, next) => {
