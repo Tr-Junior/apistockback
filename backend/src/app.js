@@ -1,6 +1,5 @@
 const express = require("express");
 const bodyParser = require('body-parser');
-const helmet = require("helmet"); // Importando o Helmet
 const app = express();
 const mongoose = require('mongoose');
 const router = express.Router();
@@ -23,7 +22,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(helmet()); // Aplicando Helmet para segurança
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.urlencoded({ extended: false }));
 
