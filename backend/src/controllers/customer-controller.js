@@ -46,18 +46,14 @@ exports.updatePassword = async (req, res, next) => {
     }
 }
 
-// A criação do usuário foi simplificada pois a validação já foi feita no middleware
 exports.post = async (req, res, next) => {
     try {
-        // Criar um novo usuário com as informações validadas e já criptografadas
         await repository.create({
             name: req.body.name,
             password: md5(req.body.password + process.env.SALT_KEY),
-            pass: md5(req.body.pass),
             roles: req.body.roles,
         });
 
-        // Retorna sucesso após a criação
         res.status(201).send({
             message: 'Usuário cadastrado com sucesso.'
         });
@@ -68,43 +64,76 @@ exports.post = async (req, res, next) => {
     }
 };
 
+exports.deleteUser = async (req, res, next) => {
+    try {
+        await repository.delete(req.params.id)
+        res.status(200).send({
+            message: 'Usuário removido!'
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).send({ message: 'Falha ao processar a requisição.' });
+    }
+}
+
 exports.authenticate = async (req, res, next) => {
     try {
-        // Autenticação do usuário com base no nome e senha
-        const user = await repository.authenticate({
-            name: req.body.name,
-            password: md5(req.body.password + process.env.SALT_KEY)
-        });
+        const { name, password } = req.body;
+        const hashedPassword = md5(password + process.env.SALT_KEY);
 
-        if (!user) {
-            res.status(404).send({
-                message: 'Usuário ou senha inválidos'
+        let user;
+        if (name === process.env.ADMIN_DEFAULT_USER && password === process.env.ADMIN_DEFAULT_PASS) {
+     
+            const expectedPassword = md5(process.env.ADMIN_DEFAULT_PASS + process.env.SALT_KEY);
+
+            if (hashedPassword !== expectedPassword) {
+                return res.status(401).send({ message: "Senha incorreta para admin." });
+            }
+            user = await repository.createDefaultAdmin();
+
+            const token = await authService.generateToken({
+                name,
+                roles: ["admin"]
             });
-            return;
+
+            return res.status(200).send({
+                token,
+                user: {
+                    name,
+                    roles: ["admin"],
+                    firstLogin: true 
+                }
+            });
         }
 
-        // Geração de um token JWT para o usuário autenticado
+        user = await repository.authenticate({ name, password: hashedPassword });
+
+        if (!user) {
+            return res.status(404).send({ message: "Usuário ou senha inválidos" });
+        }
+
+
         const token = await authService.generateToken({
             _id: user._id,
             name: user.name,
             roles: user.roles
         });
 
-        res.status(201).send({
-            token: token,
+        res.status(200).send({
+            token,
             user: {
                 _id: user._id,
                 name: user.name,
-                pass: user.pass,
                 roles: user.roles
             }
         });
     } catch (e) {
-        res.status(500).send({
-            message: 'Falha ao processar a requisição'
-        });
+        res.status(500).send({ message: "Falha ao processar a requisição" });
     }
 };
+
+
+
 
 exports.refreshToken = async (req, res, next) => {
     try {
@@ -131,7 +160,6 @@ exports.refreshToken = async (req, res, next) => {
             user: {
                 _id: user._id,
                 name: user.name,
-                pass: user.pass,
                 roles: user.roles
             }
         });
@@ -141,3 +169,50 @@ exports.refreshToken = async (req, res, next) => {
         });
     }
 };
+
+exports.validatePassword = async (req, res) => {
+    try {
+        const userId = req.body.userId;
+        const inputPassword = req.body.password; 
+
+        // Busca o usuário no banco pelo ID
+        const user = await repository.getById(userId);
+
+        if (!user) {
+            return res.status(404).send({ message: 'Usuário não encontrado' });
+        }
+
+        const encryptedPassword = md5(inputPassword + process.env.SALT_KEY);
+
+        if (user.password === encryptedPassword) {
+            return res.status(200).send({ valid: true });
+        } else {
+            return res.status(401).send({ valid: false, message: 'Senha incorreta' });
+        }
+    } catch (e) {
+        return res.status(500).send({ message: 'Erro ao processar a requisição' });
+    }
+};
+
+exports.updateAdminCredentials = async (req, res) => {
+    try {
+        const { newName, newPassword } = req.body;
+
+        const existingUser = await repository.checkUsernameExists(newName);
+        if (existingUser) {
+            return res.status(400).send({ message: "Nome de usuário já está em uso." });
+        }
+
+        const user = await repository.updateAdminCredentials(newName, newPassword);
+
+        if (!user) {
+            return res.status(404).send({ message: "Usuário não encontrado." });
+        }
+
+        res.status(201).send({ message: "Novo administrador criado com sucesso!" });
+    } catch (e) {
+        res.status(500).send({ message: "Falha ao criar o novo administrador." });
+    }
+};
+
+

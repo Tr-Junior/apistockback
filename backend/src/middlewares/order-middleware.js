@@ -64,7 +64,8 @@ exports.validateOrderInput = (req, res, next) => {
   if (!contract.isValid()) {
     return res.status(400).send({
       message: 'Erro de validação nos dados da requisição.',
-      errors: contract.errors(),
+      errors: contract.getErrors(),
+
     });
   }
 

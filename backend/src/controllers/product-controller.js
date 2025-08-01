@@ -7,25 +7,34 @@ const guid = require('guid');
 
 
 exports.get = async (req, res) => {
-    const { page = 1, limit = 100 } = req.query;
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 50;
+
+    // Evita números negativos ou muito altos
+    if (page < 1) page = 1;
+    if (limit < 1 || limit > 100) limit = 50;
 
     try {
-        const data = await repository.get(page, limit);
-        const totalItems = await repository.getTotalItems(); 
-        const totalPages = Math.ceil(totalItems / limit); 
+        // Executa as consultas em paralelo para reduzir tempo de resposta
+        const [data, totalItems] = await Promise.all([
+            repository.get(page, limit),
+            repository.getTotalItems()
+        ]);
+
+        const totalPages = Math.ceil(totalItems / limit);
 
         res.status(200).send({
-            data, 
-            totalItems, 
-            totalPages,  
-            currentPage: page, 
-            perPage: limit  
+            data,
+            totalItems,
+            totalPages,
+            currentPage: page,
+            perPage: limit
         });
     } catch (e) {
-        console.error('Erro ao processar a requisição:', e); 
+        console.error('Erro ao processar a requisição:', e);
         res.status(500).send({
             message: 'Falha ao processar a requisição',
-            error: e.message 
+            error: e.message
         });
     }
 };
@@ -49,30 +58,27 @@ exports.getById = async (req, res, next) => {
     }
 }
 
-exports.searchByTitle = async (req, res, next) => {
+exports.searchByTitle = async (req, res) => {
     try {
-      const { title, page, limit } = req.body;
-  
-      // Log para verificar o que o front-end está enviando
-      console.log(`[BACK-END] Dados recebidos:`, { title, page, limit });
-  
-      const data = await repository.getByTitle(title, page, limit);
-  
-      // Log para verificar os dados retornados ao front-end
-      console.log(`[BACK-END] Retornando página ${page}, total de produtos retornados: ${data.products.length}`);
-  
-      res.status(200).send({
-        products: data.products, // Produtos
-        totalRecords: data.total, // Total de registros
-      });
+        let { title, page = 1, limit = 50 } = req.body;
+
+        // Converte para número e define limites seguros
+        page = Math.max(1, parseInt(page) || 1);
+        limit = Math.min(100, Math.max(1, parseInt(limit) || 50));
+
+        // Executa consulta no repositório
+        const data = await repository.getByTitle(title, page, limit);
+
+        res.status(200).send({
+            products: data.products,
+            totalRecords: data.total
+        });
     } catch (e) {
-      console.error(`[BACK-END] Erro no processamento:`, e.message);
-      res.status(500).send({
-        message: 'Falha ao processar a requisição',
-      });
+        console.error('Erro na busca por título:', e);
+        res.status(500).send({ message: 'Erro interno ao processar a requisição' });
     }
-  };
-  
+};
+
   
 
 exports.post = async (req, res, next) => {
@@ -98,21 +104,29 @@ exports.post = async (req, res, next) => {
             return res.status(400).send({ message: 'Fornecedor inválido ou não encontrado' });
         }
 
-        // Cria o produto com o ID do fornecedor encontrado ou criado
+       
         await repository.create({
             codigo: guid.raw().substring(0, 6),
             title: req.body.title,
             quantity: req.body.quantity,
-            supplier: supplier._id, // Usa o ID do fornecedor
+            min_quantity: (req.body.quantity / 2),
+            supplier: supplier._id,
             purchasePrice: req.body.purchasePrice,
             price: req.body.price,
         });
 
         res.status(201).send({ message: 'Produto cadastrado com sucesso!' });
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: 'Falha ao processar a requisição' });
+        if (error.code === 11000) {
+            return res.status(400).send({
+              message: 'Já existe um produto com este título.',
+              field: error.keyValue,
+            });
+        
     }
+    console.error(error);
+    res.status(500).send({ message: 'Falha ao processar a requisição' });
+}
 };
 
 
@@ -155,6 +169,7 @@ exports.updateByIdBody = async (req, res, next) => {
         console.error(e);
         res.status(500).send({
             message: 'Falha ao processar a requisição',
+            error: e.message,
         });
     }
 };

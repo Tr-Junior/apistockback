@@ -2,12 +2,23 @@
 const mongoose = require('mongoose');
 const Order = mongoose.model('Order');
 
-exports.get = async (data) => {
-    let res = await Order.find({}, 'number createDate customer sale')
-        .populate('customer', 'name')
-        .populate('sale');
+exports.get = async () => {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0); // Início do dia
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999); // Fim do dia
+
+    let res = await Order.find(
+        { createDate: { $gte: startOfDay, $lte: endOfDay } }, // Filtra apenas vendas do dia
+        'number createDate customer sale'
+    )
+    .populate('customer', 'name')
+    .populate('sale');
+
     return res;
-}
+};
+
 
 exports.getSalesByDateRange = async (startDate, endDate) => {
     const query = {};

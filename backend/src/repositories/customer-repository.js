@@ -7,8 +7,7 @@ const md5 = require('md5');
 
 exports.get = async () => {
     const res = await Customer
-        .find({}
-        );
+        .find({});
     return res;
 }
 
@@ -43,6 +42,52 @@ exports.updatePassword = async (id, password) => {
     });
 }
 
+exports.updateAdminCredentials = async (newName, newPassword) => {
+    try {
+        const admin = await Customer.findOne({ name: process.env.ADMIN_DEFAULT_USER });
 
+        if (!admin) {
+            throw new Error('Admin não encontrado');
+        }
+
+        admin.isTemporaryPasswordUsed = true;
+        await admin.save();
+
+        const newAdmin = new Customer({
+            name: newName,
+            password: md5(newPassword + process.env.SALT_KEY),
+            roles: ["admin"],
+            firstLogin: false
+        });
+
+        await newAdmin.save();
+
+        return newAdmin;
+    } catch (e) {
+        throw new Error('Erro ao criar novo administrador');
+    }
+};
+
+
+exports.createDefaultAdmin = async () => {
+    const existingAdmin = await Customer.findOne({ name: process.env.ADMIN_DEFAULT_USER });
+
+    if (existingAdmin) {
+        throw new Error("Admin já existe.");
+    }
+
+    const user = new Customer({
+        name: process.env.ADMIN_DEFAULT_USER,
+        password: md5(process.env.ADMIN_DEFAULT_PASS + process.env.SALT_KEY),
+        roles: ["admin"],
+        firstLogin: true
+    });
+
+    return await user.save();
+};
+
+exports.delete = async (id) => {
+    await Customer.findByIdAndDelete(id);
+}
 
 

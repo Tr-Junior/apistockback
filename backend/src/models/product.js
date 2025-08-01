@@ -18,6 +18,10 @@ const productSchema = new Schema({
         required: true,
         trim: true
     },
+    min_quantity: {
+        type: Number,
+        trim: true
+    },
     supplier: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Supplier',  // Refere-se ao modelo Supplier
