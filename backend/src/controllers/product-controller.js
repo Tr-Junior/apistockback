@@ -30,6 +30,13 @@ exports.get = async (req, res) => {
     }
 };
 
+exports.getAll = async (req, res) => {
+    try {
+        const data = await repository.getAll();
+        res.status(200).send(data);
+    } catch (e) {       
+    }
+}
 
 exports.getById = async (req, res, next) => {
     try {

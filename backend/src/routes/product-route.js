@@ -9,6 +9,8 @@ const productMiddleware = require('../middlewares/product-middleware');
 // Obter todos os produtos
 router.get('/', authService.authorize, controller.get);
 
+router.get('/getAll', authService.authorize, controller.getAll);
+
 // Obter produto por ID
 router.get('/getById/:id', 
   authService.authorize, 

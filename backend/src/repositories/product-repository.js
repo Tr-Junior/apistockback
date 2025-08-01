@@ -17,7 +17,12 @@ exports.getTotalItems = async () => {
     return count;
 };
 
-
+exports.getAll = async () => {
+    const res = await Product.find({})
+        .populate('supplier')
+        .sort({ title: 1 });
+    return res;
+}
 
 exports.getBySlug = async (slug) => {
     const res = await Product
